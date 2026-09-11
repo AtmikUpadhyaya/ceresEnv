@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fieldready-api
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build --workspace @fieldready/shared && npm run build --workspace @fieldready/backend
+    startCommand: npm run start --workspace @fieldready/backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

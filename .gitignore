@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+*.pem
+*.key
+apps/backend/data/*.json
+apps/backend/uploads/*
+!apps/backend/data/.gitkeep
+!apps/backend/uploads/.gitkeep

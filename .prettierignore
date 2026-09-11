@@ -1,0 +1,4 @@
+node_modules
+dist
+apps/backend/data
+apps/backend/uploads

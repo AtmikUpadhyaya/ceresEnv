@@ -1,0 +1,25 @@
+{
+  "name": "fieldready-monorepo",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev --workspace @fieldready/backend\" \"npm run dev --workspace @fieldready/frontend\"",
+    "build": "npm run build --workspace @fieldready/shared && npm run build --workspace @fieldready/frontend && npm run build --workspace @fieldready/backend",
+    "start": "npm run start --workspace @fieldready/backend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "npm run test --workspace @fieldready/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2"
+  }
+}
