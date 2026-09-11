@@ -6,6 +6,35 @@ The project is intentionally organized as a TypeScript monorepo. The React field
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for diagrams and detailed system flows.
 
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    A[Assessor browser] --> V[Vercel React/Vite frontend]
+    B[Administrator browser] --> V
+    V -->|REST + JWT| R[Render Node/Express API]
+    R -->|SQL over TLS| P[(External PostgreSQL)]
+    V -->|Offline submissions| Q[(Per-user browser queue)]
+    Q -->|Sync when online| R
+```
+
+```mermaid
+flowchart TB
+    J[Verified JWT user.id] --> O{User role}
+    O -->|Assessor| S[Only assessments where created_by = user.id]
+    O -->|Admin| A[All assessments, filters, metrics, charts, and reviews]
+    S --> D[(PostgreSQL)]
+    A --> D
+```
+
+```mermaid
+flowchart LR
+    F[Admin filters] --> M[Metric cards]
+    F --> B[Condition and review bar charts]
+    F --> C[Condition donut chart]
+    F --> L[Filtered review list]
+```
+
 ## Core capabilities
 
 ### Field assessor portal
