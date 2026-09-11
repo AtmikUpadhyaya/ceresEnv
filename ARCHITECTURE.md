@@ -142,13 +142,13 @@ sequenceDiagram
         DB-->>API: Saved record
         API-->>F: Success
     else Offline or network failure
-        F->>Q: Save record under queue:<user-id>
+        F->>Q: Save record for the current user
         F-->>F: Show queued count
         F->>F: Browser emits online event
         F->>API: Retry current user's queued records
         API->>DB: Persist each valid record
         API-->>F: Success or retryable failure
-        F->>Q: Remove successful records; retain failed network records
+        F->>Q: Remove successful records and retain failed network records
     end
 ```
 
