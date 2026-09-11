@@ -340,6 +340,10 @@ function App() {
       </main>
       <footer>
         <span>FieldReady v1.0 · data stored locally when offline</span>
+        <span className="footer-credit">
+          Designed &amp; developed by <strong>Atmik Upadhyaya</strong>
+          <a href="mailto:atmik.atmik@gmail.com">atmik.atmik@gmail.com</a>
+        </span>
         <span>Madison County field operations</span>
       </footer>
       {notice && (

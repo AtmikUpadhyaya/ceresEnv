@@ -591,9 +591,31 @@ footer {
   border-top: 1px solid #dfe7df;
   padding: 18px 9%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
   font-size: 10px;
   color: #9aa99f;
+}
+
+.footer-credit {
+  color: #718078;
+}
+
+.footer-credit strong {
+  color: #164f34;
+  font-weight: 800;
+}
+
+.footer-credit a {
+  margin-left: 8px;
+  color: #718078;
+  text-decoration: none;
+}
+
+.footer-credit a:hover {
+  color: #164f34;
+  text-decoration: underline;
 }
 .toast {
   position: fixed;
@@ -686,6 +708,7 @@ footer {
     padding: 17px;
     font-size: 9px;
     gap: 12px;
+    flex-wrap: wrap;
   }
   footer span:last-child {
     display: none;
