@@ -5,6 +5,10 @@ import reportRoutes from './routes/report.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import { env } from './config/env.js';
+import {
+  globalErrorHandler,
+  notFoundHandler,
+} from './middleware/error.middleware.js';
 
 const app = express();
 const allowedOrigins = env.frontendUrl
@@ -25,4 +29,6 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 export default app;

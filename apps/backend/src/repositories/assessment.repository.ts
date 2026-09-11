@@ -33,9 +33,10 @@ const mapRow = (row: AssessmentRow): Assessment => ({
 });
 const columns = `id, site_name, address, latitude, longitude, condition, chicken_count, photos, notes, assessor, access, urgency, structural_damage, poultry_impact, status, created_at, updated_at, review_status, admin_comment, reviewed_by, reviewed_at`;
 
-export async function findAll(): Promise<Assessment[]> {
+export async function findAll(createdBy?: string): Promise<Assessment[]> {
   const result = await pool.query(
-    `SELECT ${columns} FROM assessments ORDER BY updated_at DESC`,
+    `SELECT ${columns} FROM assessments ${createdBy ? 'WHERE created_by=$1' : ''} ORDER BY updated_at DESC`,
+    createdBy ? [createdBy] : [],
   );
   return result.rows.map(mapRow);
 }
@@ -49,11 +50,13 @@ export async function findReviewStatus(
 }
 export async function createOrUpdate(
   input: CreateAssessmentInput,
-): Promise<Assessment> {
+  createdBy: string,
+): Promise<Assessment | null> {
   const result = await pool.query(
-    `INSERT INTO assessments (id,site_name,address,latitude,longitude,condition,chicken_count,photos,notes,assessor,access,urgency,structural_damage,poultry_impact,status,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15,$16,NOW()) ON CONFLICT (id) DO UPDATE SET site_name=EXCLUDED.site_name,address=EXCLUDED.address,latitude=EXCLUDED.latitude,longitude=EXCLUDED.longitude,condition=EXCLUDED.condition,chicken_count=EXCLUDED.chicken_count,photos=EXCLUDED.photos,notes=EXCLUDED.notes,assessor=EXCLUDED.assessor,access=EXCLUDED.access,urgency=EXCLUDED.urgency,structural_damage=EXCLUDED.structural_damage,poultry_impact=EXCLUDED.poultry_impact,status=EXCLUDED.status,updated_at=NOW() RETURNING ${columns}`,
+    `INSERT INTO assessments (id,created_by,site_name,address,latitude,longitude,condition,chicken_count,photos,notes,assessor,access,urgency,structural_damage,poultry_impact,status,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14,$15,$16,$17,NOW()) ON CONFLICT (id) DO UPDATE SET site_name=EXCLUDED.site_name,address=EXCLUDED.address,latitude=EXCLUDED.latitude,longitude=EXCLUDED.longitude,condition=EXCLUDED.condition,chicken_count=EXCLUDED.chicken_count,photos=EXCLUDED.photos,notes=EXCLUDED.notes,assessor=EXCLUDED.assessor,access=EXCLUDED.access,urgency=EXCLUDED.urgency,structural_damage=EXCLUDED.structural_damage,poultry_impact=EXCLUDED.poultry_impact,status=EXCLUDED.status,updated_at=NOW() WHERE assessments.created_by=EXCLUDED.created_by RETURNING ${columns}`,
     [
       input.id,
+      createdBy,
       input.siteName,
       input.address,
       input.latitude,
@@ -71,19 +74,23 @@ export async function createOrUpdate(
       input.createdAt || new Date().toISOString(),
     ],
   );
-  return mapRow(result.rows[0]);
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 export async function updateStatus(
   id: string,
   status: AssessmentStatus,
+  ownerId?: string,
 ): Promise<Assessment | null> {
   const result = await pool.query(
-    `UPDATE assessments SET status=$1,updated_at=NOW() WHERE id=$2 RETURNING ${columns}`,
-    [status, id],
+    `UPDATE assessments SET status=$1,updated_at=NOW() WHERE id=$2 ${ownerId ? 'AND created_by=$3' : ''} RETURNING ${columns}`,
+    ownerId ? [status, id, ownerId] : [status, id],
   );
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
-export async function remove(id: string): Promise<boolean> {
-  const result = await pool.query('DELETE FROM assessments WHERE id=$1', [id]);
+export async function remove(id: string, ownerId?: string): Promise<boolean> {
+  const result = await pool.query(
+    `DELETE FROM assessments WHERE id=$1 ${ownerId ? 'AND created_by=$2' : ''}`,
+    ownerId ? [id, ownerId] : [id],
+  );
   return result.rowCount === 1;
 }

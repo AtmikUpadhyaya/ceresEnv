@@ -1,8 +1,8 @@
 import { CreateAssessmentInput } from '@fieldready/shared';
-const KEY = 'fieldready-sync-queue-v1';
-export const readQueue = (): CreateAssessmentInput[] =>
-  JSON.parse(localStorage.getItem(KEY) || '[]');
-export const writeQueue = (records: CreateAssessmentInput[]) =>
-  localStorage.setItem(KEY, JSON.stringify(records));
-export const enqueue = (record: CreateAssessmentInput) =>
-  writeQueue([...readQueue(), record]);
+const keyFor = (userId: string) => `fieldready-sync-queue-v1:${userId}`;
+export const readQueue = (userId: string): CreateAssessmentInput[] =>
+  JSON.parse(localStorage.getItem(keyFor(userId)) || '[]');
+export const writeQueue = (userId: string, records: CreateAssessmentInput[]) =>
+  localStorage.setItem(keyFor(userId), JSON.stringify(records));
+export const enqueue = (userId: string, record: CreateAssessmentInput) =>
+  writeQueue(userId, [...readQueue(userId), record]);

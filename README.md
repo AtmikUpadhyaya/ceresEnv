@@ -24,6 +24,8 @@ Create an admin account after the migration by setting `ADMIN_EMAIL`, `ADMIN_PAS
 
 Frontend: `http://localhost:5174` · API health: `http://localhost:4100/api/health`
 
+Use `npm run dev` to start both servers. Use `npm run dev:setup` for a one-command local startup that runs database migrations first and then starts both servers. Admin seeding remains a separate one-time command so normal startup never changes credentials.
+
 Useful commands: `npm run build`, `npm test`, `npm run format`, and `npm run lint`.
 
 ## Free deployment: Vercel frontend + Render backend
@@ -60,8 +62,11 @@ The application uses PostgreSQL via the `pg` driver. `DATABASE_URL` configures t
 - Required site data: latitude, longitude, address, farm condition, chicken count, and farm photos.
 - Additional field features: assessor, access status, urgency, structural damage, poultry impact, notes, photo evidence, county summary, and follow-up flags.
 - Limited connectivity: records save to a local sync queue when offline and retry when the browser comes online. The UI shows network and queued-record status.
+- Network status: the online/offline badge reflects the browser's network state; API, CORS, or database failures are reported separately and do not falsely mark the device offline.
 - Backend: REST endpoints for assessment CRUD, status changes, health, and county summary reporting. CRUD is separated into routes, controllers, services, and the PostgreSQL repository; reporting has its own route/controller/service.
 - Authentication: Zod-validated registration/login, bcrypt password hashing, eight-hour JWTs, bearer-token middleware, and admin-only review endpoints.
+- Data isolation: every new assessment is assigned to the authenticated user's `users.id` through `assessments.created_by`. Assessor list, update, status, delete, and summary queries are owner-scoped; administrators can view and manage all assessments.
+- Admin analytics: the admin panel supports search and filters for review status, condition, urgency, and access, with filtered metric cards and condition/review breakdown bar charts.
 - Registration protection: PostgreSQL-backed limit of 20 successful accounts per source IP. This is an abuse-control layer, not an identity guarantee; production should also use email verification and CAPTCHA, and configure proxy trust carefully when deployed behind a load balancer.
 - Git/CI: `.gitignore`, `.gitattributes`, Prettier configuration, and GitHub Actions workflow for install, format check, build, and tests.
 

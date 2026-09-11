@@ -16,6 +16,7 @@ import {
   getSummary,
   listAssessments,
   saveAssessment,
+  ApiError,
 } from './api/assessments';
 import { enqueue, readQueue, writeQueue } from './storage/offlineQueue';
 import { logout, readUser } from './api/auth';
@@ -68,12 +69,14 @@ function App() {
       setRecords(a.data);
       setSummary(s.data);
     } catch {
-      setOnline(false);
+      // API failures do not necessarily mean the device is offline.
+      // The network badge is controlled only by browser online/offline events.
+      setNotice('Unable to refresh records. Please try again shortly.');
     }
   };
   const sync = async () => {
-    if (!navigator.onLine) return;
-    const pending = readQueue();
+    if (!navigator.onLine || !user) return;
+    const pending = readQueue(user.id);
     const remaining: CreateAssessmentInput[] = [];
     for (const item of pending) {
       try {
@@ -82,12 +85,13 @@ function App() {
         remaining.push(item);
       }
     }
-    writeQueue(remaining);
+    writeQueue(user.id, remaining);
     refresh();
   };
   useEffect(() => {
     if (!user) return;
     refresh();
+    sync();
     const on = () => {
       setOnline(true);
       sync();
@@ -112,6 +116,7 @@ function App() {
     setModal(true);
   };
   const submit = async (status: 'draft' | 'complete') => {
+    if (!user) return;
     const record = {
       ...form,
       status,
@@ -125,12 +130,16 @@ function App() {
       return;
     }
     try {
-      if (online) await saveAssessment(record);
+      if (navigator.onLine) await saveAssessment(record);
       else throw new Error('offline');
       setNotice(status === 'draft' ? 'Draft saved' : 'Assessment saved');
-    } catch {
-      enqueue(record);
-      setNotice('Saved on device — will sync later');
+    } catch (error) {
+      if (!navigator.onLine || !(error instanceof ApiError)) {
+        enqueue(user.id, record);
+        setNotice('Saved on device — will sync later');
+      } else {
+        setNotice(error.message);
+      }
     }
     setModal(false);
     refresh();
@@ -153,7 +162,9 @@ function App() {
         </div>
         <div className={`network ${online ? 'online' : ''}`}>
           <i /> {online ? 'Online' : 'Offline'}
-          {readQueue().length ? ` · ${readQueue().length} queued` : ''}
+          {readQueue(user.id).length
+            ? ` · ${readQueue(user.id).length} queued`
+            : ''}
         </div>
         <button
           className="help"

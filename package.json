@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "concurrently -k \"npm run dev --workspace @fieldready/backend\" \"npm run dev --workspace @fieldready/frontend\"",
+    "dev:setup": "npm run db:migrate --workspace @fieldready/backend && npm run dev",
     "build": "npm run build --workspace @fieldready/shared && npm run build --workspace @fieldready/frontend && npm run build --workspace @fieldready/backend",
     "start": "npm run start --workspace @fieldready/backend",
     "format": "prettier --write .",

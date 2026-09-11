@@ -5,12 +5,31 @@ import {
 } from '@fieldready/shared';
 import { getToken } from './auth';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4100/api';
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API}${path}`, {
     ...options,
     headers: { Authorization: `Bearer ${getToken()}`, ...options?.headers },
   });
-  if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+  if (!response.ok) {
+    let message = `API request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      message = payload.message || payload.errors || message;
+    } catch {
+      // Keep the status-based message when the server returns no JSON.
+    }
+    throw new ApiError(String(message), response.status);
+  }
   return response.json() as Promise<T>;
 }
 export const listAssessments = () =>

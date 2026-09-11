@@ -11,11 +11,12 @@ export class ValidationError extends Error {
   }
 }
 export class LockedAssessmentError extends Error {}
-export async function listAssessments(): Promise<Assessment[]> {
-  return repository.findAll();
+export async function listAssessments(userId: string, isAdmin: boolean) {
+  return repository.findAll(isAdmin ? undefined : userId);
 }
 export async function saveAssessment(
   input: CreateAssessmentInput,
+  userId: string,
 ): Promise<Assessment> {
   const errors = validateAssessment(input);
   if (Object.keys(errors).length) throw new ValidationError(errors);
@@ -24,14 +25,23 @@ export async function saveAssessment(
     if (reviewStatus && reviewStatus !== 'pending')
       throw new LockedAssessmentError('Reviewed assessments cannot be edited');
   }
-  return repository.createOrUpdate(input);
+  const assessment = await repository.createOrUpdate(input, userId);
+  if (!assessment)
+    throw new LockedAssessmentError('Assessment belongs to another user');
+  return assessment;
 }
 export async function changeStatus(
   id: string,
   status: AssessmentStatus,
+  userId: string,
+  isAdmin: boolean,
 ): Promise<Assessment | null> {
-  return repository.updateStatus(id, status);
+  return repository.updateStatus(id, status, isAdmin ? undefined : userId);
 }
-export async function deleteAssessment(id: string): Promise<boolean> {
-  return repository.remove(id);
+export async function deleteAssessment(
+  id: string,
+  userId: string,
+  isAdmin: boolean,
+): Promise<boolean> {
+  return repository.remove(id, isAdmin ? undefined : userId);
 }
